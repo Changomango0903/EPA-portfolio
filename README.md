@@ -1,4 +1,4 @@
-# EPA Portfolio toolkit 📊✨
+# EDA Portfolio toolkit 📊✨
 
 <div align="center">
 
