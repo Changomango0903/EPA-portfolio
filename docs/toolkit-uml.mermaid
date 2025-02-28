@@ -1,0 +1,154 @@
+classDiagram
+    %% Main modules
+    class DataVisualizationToolkit {
+        +loaders
+        +cleaner
+        +visualizer
+        +analyzer
+        +transformer
+        +utils
+        +themes
+    }
+    
+    %% Loaders module
+    class loaders {
+        +load_csv(filepath, delimiter, encoding, infer_types, parse_dates, low_memory) Tuple[DataFrame, Dict]
+        +load_excel(filepath, sheet_name) Tuple[DataFrame, Dict]
+        +load_json(filepath, normalize, record_path) Tuple[DataFrame, Dict]
+        +load_data(filepath, file_type) Tuple[DataFrame, Dict]
+    }
+    
+    %% Cleaner module
+    class cleaner {
+        +detect_missing(df, include_zeros, include_empty_strings) Dict
+        +handle_missing(df, strategy, fill_values, drop_threshold) DataFrame
+        +detect_outliers(df, columns, method, threshold) Dict
+        +handle_outliers(df, columns, method, threshold, strategy) DataFrame
+        +standardize_column_names(df, case, remove_special, prefix) DataFrame
+        +convert_dtypes(df, conversions, auto_convert, date_format) DataFrame
+        +remove_duplicates(df, subset, keep, reset_index) DataFrame
+    }
+    
+    %% Visualizer module
+    class visualizer {
+        +PlotConfig
+        +set_mpl_style(style, context, palette)
+        +generate_palette(n_colors, palette_type, base_color) List[str]
+        +plot_histogram(df, column, bins, kde, engine) Figure
+        +plot_bar(df, x, y, orientation, engine, sort_values) Figure
+        +plot_scatter(df, x, y, color, size, text, trendline) Figure
+        +plot_line(df, x, y, color, markers, engine) Figure
+        +plot_box(df, x, y, engine) Figure
+        +plot_heatmap(df, columns, corr_method, annot, mask_upper) Figure
+        +plot_pairs(df, columns, hue, engine, diag_kind) Figure
+        +plot_pie(df, column, values, top_n, other_label) Figure
+        +plot_timeseries(df, date_column, value_columns, freq) Figure
+        +create_dashboard(df, plots, title, width, height) Figure
+        +plot_multiple(df, plots, ncols, figsize, engine) Figure
+        +plot_summary(df, columns, engine, figsize) Figure
+        +plot_distribution_comparison(df, column, group_by) Figure
+    }
+    
+    %% PlotConfig class
+    class PlotConfig {
+        +width: int
+        +height: int
+        +title: str
+        +xlabel: str
+        +ylabel: str
+        +title_size: int
+        +label_size: int
+        +tick_size: int
+        +palette: list
+        +grid: bool
+        +legend: bool
+        +legend_loc: str
+        +tight_layout: bool
+        +fontname: str
+        +style: str
+        +context: str
+        +despine: bool
+        +apply_to_matplotlib(fig, ax)
+        +apply_to_plotly(fig)
+    }
+    
+    %% Analyzer module
+    class analyzer {
+        +get_summary_statistics(df, columns, include_percentiles) DataFrame
+        +get_categorical_statistics(df, columns, max_categories) Dict
+        +correlation_analysis(df, columns, method, min_correlation) Tuple[DataFrame, Dict]
+        +analyze_feature_importance(df, target_column, feature_columns) DataFrame
+        +compare_groups(df, column, group_column, method) Dict
+        +distribution_analysis(df, column, test_normality, bins) Dict
+        +time_series_analysis(df, date_column, value_column, freq) Dict
+        +cluster_analysis(df, columns, n_clusters, method) Dict
+    }
+    
+    %% Transformer module
+    class transformer {
+        +normalize_data(df, columns, method, range_min, range_max) DataFrame
+        +encode_categorical(df, columns, method, drop_first) DataFrame
+        +bin_numeric(df, column, n_bins, strategy, labels) DataFrame
+        +create_date_features(df, date_column, features, drop_original) DataFrame
+        +reduce_dimensions(df, columns, method, n_components) DataFrame
+        +polynomial_features(df, columns, degree, interaction_only) DataFrame
+        +log_transform(df, columns, method, base, handle_zeros) DataFrame
+        +discretize(df, columns, n_bins, strategy) DataFrame
+        +group_rare_categories(df, column, threshold, new_category) DataFrame
+        +scale_features(df, columns, method) DataFrame
+    }
+    
+    %% Themes module
+    class themes {
+        +set_theme(name)
+        +get_color_palette(palette_name, n_colors) List[str]
+        +get_theme_colors() Dict
+        +create_custom_theme(colors, styles) Dict
+        +apply_theme_to_figure(fig, theme)
+    }
+    
+    %% Utils module
+    class utils {
+        +get_memory_usage(df) Dict
+        +convert_bytes(size_bytes) str
+        +describe_all_columns(df) DataFrame
+        +get_dataframe_info(df) Dict
+        +run_profiling(df, output_file) None
+        +check_missing_patterns(df) Dict
+        +save_figure(fig, filename, format, dpi) str
+        +export_data(df, filename, format) str
+    }
+    
+    %% Define relationships
+    DataVisualizationToolkit --> loaders
+    DataVisualizationToolkit --> cleaner
+    DataVisualizationToolkit --> visualizer
+    DataVisualizationToolkit --> analyzer
+    DataVisualizationToolkit --> transformer
+    DataVisualizationToolkit --> themes
+    DataVisualizationToolkit --> utils
+    
+    visualizer --> PlotConfig
+    visualizer ..> themes : uses
+    
+    %% Usage dependencies
+    loaders <.. cleaner : uses
+    cleaner <.. transformer : uses
+    cleaner <.. analyzer : uses
+    cleaner <.. visualizer : uses
+    
+    visualizer ..> utils : uses
+    analyzer ..> transformer : uses
+    
+    %% External Libraries
+    class ExternalLibraries {
+        +pandas
+        +numpy
+        +matplotlib
+        +seaborn
+        +plotly
+        +scipy
+        +scikit-learn
+    }
+    
+    DataVisualizationToolkit ..> ExternalLibraries : depends on
