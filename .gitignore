@@ -215,3 +215,4 @@ test_output/
 
 # Example notebooks that are not part of the main codebase
 examples/scratch/
+.EDA/
