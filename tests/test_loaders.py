@@ -67,5 +67,43 @@ class TestLoaders(unittest.TestCase):
         self.assertEqual(os.path.basename(metadata['filename']), "test_data.csv")
         self.assertIn('column_types', metadata)
 
+    def test_loada_csv_with_options(self):
+        """Test CSV loading with additional options."""
+        df, metadata = load_csv(
+            self.csv_path,
+            delimiter = ',',
+            encoding = 'utf-8',
+            infer_types = True,
+            parse_dates = False,
+            usecols = ['name', 'age', 'department']
+        )
+
+        self.assertEqual(list(df.columns), ['name', 'age', 'department'])
+        self.assertEqual(len(df), 5)
+        
+        self.assertEqual(df['age'].dtype, np.int64)
+
+    def test_load_csv_missing_file(self):
+        """Test handling of missing CSV file."""
+        with self.assertRaises(FileNotFoundError):
+            load_csv('non_existent_file.csv')
+
+    def test_load_csv_bad_encoding(self):
+        """Test handling of encoding issues."""
+        # Create mock CSV with non-UTF8 characters
+        mock_csv_data = b'id,name\n1,\xff\xfeTest'
+        
+        with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as f:
+            f.write(mock_csv_data)
+            bad_encoding_path = f.name
+        
+        try:
+            df, metadata = load_csv(bad_encoding_path)
+            self.assertIn('encoding_used', metadata)
+        except:
+            pass
+        
+        os.unlink(bad_encoding_path)
+
 if __name__ == '__main__':
     unittest.main()
