@@ -115,6 +115,28 @@ class TestLoaders(unittest.TestCase):
         self.assertEqual(metadata['rows'], 5)
         self.assertEqual(metadata['columns'], ['id', 'name', 'age', 'salary', 'department'])
         self.assertEqual(os.path.basename(metadata['filename']), "test_data.xlsx")
+    
+    def test_load_excel_missing_file(self):
+        """Test handling of missing Excel file."""
+        with self.assertRaises(FileNotFoundError):
+            load_excel('non_existent_file.xlsx')
+
+    def test_load_excel_with_sheet_name(self):
+        """Test Excel loading with specific sheet name."""
+        with pd.ExcelWriter(self.excel_path, engine='openpyxl') as writer:
+            pd.DataFrame(self.json_data).to_excel(writer, sheet_name='Sheet1', index=False)
+            pd.DataFrame({'A': [1, 2], 'B': [3, 4]}).to_excel(writer, sheet_name='Sheet2', index=False)
+        
+        df, metadata = load_excel(self.excel_path, sheet_name='Sheet2')
+        self.assertEqual(list(df.columns), ['A', 'B'])
+        self.assertEqual(len(df), 2)
+        
+        dfs, metadata = load_excel(self.excel_path, sheet_name=None)
+        self.assertIsInstance(dfs, dict)
+        self.assertIn('Sheet1', dfs)
+        self.assertIn('Sheet2', dfs)
+        self.assertIn('sheets', metadata)
+        self.assertEqual(metadata['sheets'], ['Sheet1', 'Sheet2'])
 
 if __name__ == '__main__':
     unittest.main()
