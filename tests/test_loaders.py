@@ -7,7 +7,7 @@ import json
 from io import StringIO
 from unittest.mock import patch, mock_open
 
-from EDA_toolkit.loaders import load_csv
+from EDA_toolkit.loaders import load_csv, load_excel
 
 class TestLoaders(unittest.TestCase):
     """Test Cases for loaders module."""
@@ -104,6 +104,17 @@ class TestLoaders(unittest.TestCase):
             pass
         
         os.unlink(bad_encoding_path)
+
+    def test_load_excel_basic(self):
+        """Test Basic Excel loading functionality."""
+        df, metadata = load_excel(self.excel_path)
+        
+        self.assertEqual(len(df), 5)
+        self.assertEqual(list(df.columns), ['id', 'name', 'age', 'salary', 'department'])
+        
+        self.assertEqual(metadata['rows'], 5)
+        self.assertEqual(metadata['columns'], ['id', 'name', 'age', 'salary', 'department'])
+        self.assertEqual(os.path.basename(metadata['filename']), "test_data.xlsx")
 
 if __name__ == '__main__':
     unittest.main()

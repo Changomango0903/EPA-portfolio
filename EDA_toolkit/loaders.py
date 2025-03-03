@@ -63,3 +63,39 @@ def load_csv(filepath: str, delimiter: str = ',', encoding: str = 'utf-8', infer
                 except:
                     continue
         raise ValueError(f"Could not decode file with any of the following encodings: {encoding}, latin1, iso-8859-1, cp1252")
+
+def load_excel(filepath: str, sheet_name: Optional[Union[str, int, List[Union[str, int]]]] = 0, **kwargs) -> Tuple[Union[pd.DataFrame, Dict[str, pd.DataFrame]], Dict]:
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File not found: {filepath}")
+    
+    file_size = os.path.getsize(filepath) / (1024 * 1024)
+    file_name = os.path.basename(filepath)
+    
+    try:
+        result = pd.read_excel(filepath, sheet_name = sheet_name, **kwargs)
+        
+        metadata = {
+            'filename': file_name,
+            'file_size_mb': file_size
+        }
+        
+        if isinstance(result, pd.DataFrame):
+            metadata['rows'] = len(result)
+            metadata['columns'] = list(result.columns)
+            metadata['column_types'] = {col: str(dtype) for col, dtype in result.dtypes.items()}
+            metadata['sheet_name'] = sheet_name if isinstance(sheet_name, (str, int)) else 'unknown'
+        else:
+            metadata['sheets'] = list(result.keys())
+            metadata['sheet_info'] = {
+                sheet: {
+                    'rows': len(df),
+                    'columns': list(df.columns)
+                }
+                for sheet, df in result.items()
+            }
+            
+        return result, metadata
+    
+    except Exception as e:
+        raise ValueError(f"Error handling Excel file: {str(e)}")
+        
