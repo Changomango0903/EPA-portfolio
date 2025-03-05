@@ -136,3 +136,40 @@ def load_json(filepath: str, normalize: bool = True, record_path: Optional[Union
         raise ValueError("Invalid JSON file format")
     except Exception as e:
         raise ValueError(f"Error loading JSON file: {str(e)}")
+
+def load_data(filepath: str, file_type: Optional[str] = None, **kwargs) -> Tuple[pd.DataFrame, Dict]:
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File not found {filepath}")
+    
+    if file_type is None:
+        file_extension = os.path.splitext(filepath)[1].lower()
+        if file_extension in ['.csv', '.txt', '.tsv', '.dat']:
+            file_type = 'csv'
+        elif file_extension in ['.xlsx', '.xls', '.xlsm']:
+            file_type = 'excel'
+        elif file_extension in ['.json']:
+            file_type = 'json'
+        else:
+            raise ValueError(f"Unsupported file extension: {file_extension}")
+    else:
+        file_extension = os.path.splitext(filepath)[1].lower()
+        if file_type == 'csv' and file_extension not in ['.csv', '.txt', '.tsv', '.dat']:
+            raise ValueError(f"File with extension {file_extension} is not compatible with 'csv' file type")
+        elif file_type == 'excel' and file_extension not in ['.xlsx', '.xls', '.xlsm']:
+            raise ValueError(f"File with extension {file_extension} is not compatible with 'excel' file type")
+        elif file_type == 'json' and file_extension not in ['.json']:
+            raise ValueError(f"File with extension {file_extension} is not compatible with 'json' file type")
+    
+    if file_type == 'csv':
+        if 'delimiter' not in kwargs and filepath.endswith('.tsv'):
+            kwargs['delimiter'] = '\t'
+        return load_csv(filepath, **kwargs)
+
+    elif file_type == 'excel':
+        return load_excel(filepath, **kwargs)
+    
+    elif file_type == 'json':
+        return load_json(filepath, **kwargs)
+    
+    else:
+        raise ValueError(f"Unsupported file type: {file_type}")
