@@ -7,7 +7,7 @@ import json
 from io import StringIO
 from unittest.mock import patch, mock_open
 
-from EDA_toolkit.loaders import load_csv, load_excel
+from EDA_toolkit.loaders import load_csv, load_excel, load_json
 
 class TestLoaders(unittest.TestCase):
     """Test Cases for loaders module."""
@@ -138,5 +138,50 @@ class TestLoaders(unittest.TestCase):
         self.assertIn('sheets', metadata)
         self.assertEqual(metadata['sheets'], ['Sheet1', 'Sheet2'])
 
+    def test_load_json_basic(self):
+        """Test basic JSON loading functionality."""
+        df, metadata = load_json(self.json_path)
+        
+        self.assertEqual(len(df), 5)
+        self.assertEqual(list(df.columns), ['id', 'name', 'age', 'salary', 'department'])
+        
+        self.assertEqual(metadata['rows'], 5)
+        self.assertEqual(metadata['columns'], ['id', 'name', 'age', 'salary', 'department'])
+        self.assertEqual(os.path.basename(metadata['filename']), "test_data.json")
+        
+    def test_load_json_nested(self):
+        """Test loading nested JSON with normalization"""
+        nested_json = {
+            "data": [
+                {"user": {"id": 1, "name": "John"}, "stats": {"visits": 10}},
+                {"user": {"id": 2, "name": "Jane"}, "stats": {"visits": 20}}
+            ]
+        }
+        
+        with tempfile.NamedTemporaryFile(suffix = '.json', delete=False, mode = 'w') as f:
+            json.dump(nested_json, f)
+            nested_json_path = f.name
+        
+        try:
+            df, metadata = load_json(nested_json_path, normalize = True, record_path = ['data'])
+            self.assertEqual(len(df), 2)
+            
+            self.assertIn('user.id', df.columns)
+            self.assertIn('stats.visits', df.columns)
+        finally:
+            os.unlink(nested_json_path)
+    
+    def test_load_json_invalid(self):
+        """Test handling invalid JSON file"""
+        with tempfile.NamedTemporaryFile(suffix = '.json', delete = False) as f:
+            f.write(b'{"invalid": JSON')
+            invalid_json_path = f.name
+        
+        try:
+            with self.assertRaises(ValueError):
+                load_json(invalid_json_path)
+        finally:
+            os.unlink(invalid_json_path)
+        
 if __name__ == '__main__':
     unittest.main()
