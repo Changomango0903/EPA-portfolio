@@ -7,7 +7,7 @@ import json
 from io import StringIO
 from unittest.mock import patch, mock_open
 
-from EDA_toolkit.loaders import load_csv, load_excel, load_json
+from EDA_toolkit.loaders import load_csv, load_excel, load_json, load_data
 
 class TestLoaders(unittest.TestCase):
     """Test Cases for loaders module."""
@@ -182,6 +182,46 @@ class TestLoaders(unittest.TestCase):
                 load_json(invalid_json_path)
         finally:
             os.unlink(invalid_json_path)
+    
+    def test_load_data_auto_detect(self):
+        """Test automatic file type detection in load_data."""
+        # CSV detection
+        df_csv, metadata_csv = load_data(self.csv_path)
+        self.assertEqual(len(df_csv), 5)
         
+        # Excel detection
+        df_excel, metadata_excel = load_data(self.excel_path)
+        self.assertEqual(len(df_excel), 5)
+        
+        # JSON detection
+        df_json, metadata_json = load_data(self.json_path)
+        self.assertEqual(len(df_json), 5)
+        
+        # TSV detection and delimiter inference
+        df_tsv, metadata_tsv = load_data(self.tsv_path)
+        self.assertEqual(len(df_tsv), 5)
+    
+    def test_load_data_explicit_type(self):
+        """Test load_data with explicit file type."""
+        # Force CSV loading for a JSON file
+        with self.assertRaises(Exception):
+            load_data(self.json_path, file_type='csv')
+        
+        # Force JSON loading for a CSV file
+        with self.assertRaises(Exception):
+            load_data(self.csv_path, file_type='json')
+    
+    def test_load_data_unsupported_format(self):
+        """Test handling of unsupported file formats."""
+        with tempfile.NamedTemporaryFile(suffix='.unsupported', delete=False) as f:
+            f.write(b'Some random data')
+            unsupported_path = f.name
+        
+        try:
+            with self.assertRaises(ValueError):
+                load_data(unsupported_path)
+        finally:
+            os.unlink(unsupported_path)
+    
 if __name__ == '__main__':
     unittest.main()
