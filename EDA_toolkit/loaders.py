@@ -98,4 +98,41 @@ def load_excel(filepath: str, sheet_name: Optional[Union[str, int, List[Union[st
     
     except Exception as e:
         raise ValueError(f"Error handling Excel file: {str(e)}")
+    
+def load_json(filepath: str, normalize: bool = True, record_path: Optional[Union[str, List[str]]] = None, **kwargs) -> Tuple[pd.DataFrame, Dict]:
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File not found: {filepath}")
+
+    file_size = os.path.getsize(filepath) / (1024*1024)
+    file_name = os.path.basename(filepath)
+    
+    try:
+        with open(filepath, 'r', encoding = 'utf-8') as f:
+            json_data = json.load(f)
         
+        if normalize:
+            if record_path:
+                df = pd.json_normalize(json_data, record_path = record_path, **kwargs)
+            else:
+                if isinstance(json_data, list):
+                    df = pd.json_normalize(json_data, **kwargs)
+                else:
+                    df = pd.json_normalize([json_data], **kwargs)
+        else:
+            df = pd.DataFrame(json_data)
+        
+        
+        metadata = {
+            'filename': file_name,
+            'file_size_mb': file_size,
+            'rows': len(df),
+            'columns': list(df.columns),
+            'column_types': {col: str(dtype) for col, dtype in df.dtypes.items()}
+        }
+        
+        return df, metadata
+    
+    except json.JSONDecodeError:
+        raise ValueError("Invalid JSON file format")
+    except Exception as e:
+        raise ValueError(f"Error loading JSON file: {str(e)}")
